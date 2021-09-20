@@ -3,15 +3,23 @@ package stream
 import (
 	"sync"
 	"time"
+
+	"github.com/haivision/srtgo"
 )
 
 var IngestStreams = make(map[string]StreamSender)
 
+type StreamReceiver struct {
+	EgestStreamInformation EgestStreamInformation
+	Socket                 srtgo.SrtSocket
+}
+
 type StreamSender struct {
 	Broadcast               chan<- []byte
 	IngestStreamInformation IngestStreamInformation
+	Socket                  srtgo.SrtSocket
 
-	Outputs map[chan []byte]struct{}
+	Outputs map[chan []byte]StreamReceiver
 
 	LockOutputs sync.Mutex
 }
@@ -27,12 +35,13 @@ type IngestStreamInformation struct {
 	ConnectedAt time.Time
 }
 
-func NewStreamSender(ingestStreamInformation IngestStreamInformation) (streamSender *StreamSender) {
+func NewStreamSender(ingestStreamInformation IngestStreamInformation, socket srtgo.SrtSocket) (streamSender *StreamSender) {
 	streamSender = &StreamSender{}
 	broadcast := make(chan []byte, 1024)
 	streamSender.Broadcast = broadcast
-	streamSender.Outputs = make(map[chan []byte]struct{})
+	streamSender.Outputs = make(map[chan []byte]StreamReceiver)
 	streamSender.IngestStreamInformation = ingestStreamInformation
+	streamSender.Socket = socket
 
 	go streamSender.run(broadcast)
 	return streamSender
@@ -68,9 +77,12 @@ func (streamSender *StreamSender) Close() {
 }
 
 // Register a new output
-func (streamSender *StreamSender) Register(output chan []byte) {
+func (streamSender *StreamSender) Register(output chan []byte, info EgestStreamInformation, socket srtgo.SrtSocket) {
 	streamSender.LockOutputs.Lock()
-	streamSender.Outputs[output] = struct{}{}
+	streamSender.Outputs[output] = StreamReceiver{
+		EgestStreamInformation: info,
+		Socket:                 socket,
+	}
 	streamSender.LockOutputs.Unlock()
 }
 

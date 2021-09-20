@@ -44,7 +44,7 @@ func HandleIngressSocket(socket *srtgo.SrtSocket, addr *net.UDPAddr) {
 		ConnectedAt: time.Now(),
 	}
 
-	streamSender := stream.NewStreamSender(*ingestInfo)
+	streamSender := stream.NewStreamSender(*ingestInfo, *socket)
 	stream.IngestStreams[streamId] = *streamSender
 
 	for {
@@ -114,7 +114,7 @@ func ListenEgressSocket() {
 
 func HandleEgressSocket(socket srtgo.SrtSocket, addr *net.UDPAddr) {
 	c := make(chan []byte, 1024)
-	stream, ok := stream.IngestStreams["test"]
+	currentStream, ok := stream.IngestStreams["test"]
 
 	if !ok {
 		log.Println("Unable to create SRT viewer, no ingest stream found")
@@ -123,12 +123,12 @@ func HandleEgressSocket(socket srtgo.SrtSocket, addr *net.UDPAddr) {
 		return
 	}
 
-	egestInfo := &stream.EgestStreamInformation{
+	egestInfo := stream.EgestStreamInformation{
 		Remote:      addr.String(),
 		ConnectedAt: time.Now(),
 	}
 
-	stream.Register(c)
+	currentStream.Register(c, egestInfo, socket)
 
 	for data := range c {
 		if len(data) < 1 {
@@ -143,6 +143,6 @@ func HandleEgressSocket(socket srtgo.SrtSocket, addr *net.UDPAddr) {
 		}
 	}
 
-	stream.Unregister(c)
+	currentStream.Unregister(c)
 	socket.Close()
 }

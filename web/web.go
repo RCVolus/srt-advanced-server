@@ -1,22 +1,24 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 
 	"github.com/RCVolus/srt-advanced-server/stream"
+	"github.com/haivision/srtgo"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
 
 type OutputInfo struct {
-	StreamInfo stream.EgestStreamInformation
+	StreamInfo  stream.EgestStreamInformation
+	StreamStats srtgo.SrtStats
 }
 
 type StreamInfo struct {
-	StreamInfo stream.IngestStreamInformation
-	Outputs    OutputInfo
+	StreamInfo  stream.IngestStreamInformation
+	StreamStats srtgo.SrtStats
+	Outputs     []OutputInfo
 }
 
 func StartHttp() {
@@ -26,20 +28,28 @@ func StartHttp() {
 	e.Use(middleware.Recover())
 
 	e.GET("/", func(c echo.Context) error {
-		return c.HTML(http.StatusOK, fmt.Sprintf("Welcome to srt-advanced-server, ingest streams: %d", len(stream.IngestStreams)))
-	})
-
-	e.GET("/ping", func(c echo.Context) error {
-		outputs := make(map[string]StreamInfo)
+		streamInfo := make(map[string]StreamInfo)
 
 		for key, value := range stream.IngestStreams {
-			outputs[key] = StreamInfo{
-				StreamInfo: value.IngestStreamInformation,
-				NumOutputs: len(value.Outputs),
+			var outputs []OutputInfo
+
+			for _, output := range value.Outputs {
+				stats, _ := output.Socket.Stats()
+				outputs = append(outputs, OutputInfo{
+					StreamInfo:  output.EgestStreamInformation,
+					StreamStats: *stats,
+				})
+			}
+
+			stats, _ := value.Socket.Stats()
+			streamInfo[key] = StreamInfo{
+				StreamInfo:  value.IngestStreamInformation,
+				StreamStats: *stats,
+				Outputs:     outputs,
 			}
 		}
 
-		return c.JSON(http.StatusOK, outputs)
+		return c.JSON(http.StatusOK, streamInfo)
 	})
 
 	httpPort := os.Getenv("HTTP_PORT")
