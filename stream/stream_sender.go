@@ -1,22 +1,30 @@
-package main
+package stream
 
 import (
 	"sync"
 )
 
+var IngestStreams = make(map[string]StreamSender)
+
 type StreamSender struct {
-	Broadcast chan<- []byte
+	Broadcast               chan<- []byte
+	IngestStreamInformation IngestStreamInformation
 
 	Outputs map[chan []byte]struct{}
 
 	LockOutputs sync.Mutex
 }
 
-func newStreamSender() (streamSender *StreamSender) {
+type IngestStreamInformation struct {
+	StreamId string
+}
+
+func NewStreamSender(ingestStreamInformation IngestStreamInformation) (streamSender *StreamSender) {
 	streamSender = &StreamSender{}
 	broadcast := make(chan []byte, 1024)
 	streamSender.Broadcast = broadcast
 	streamSender.Outputs = make(map[chan []byte]struct{})
+	streamSender.IngestStreamInformation = ingestStreamInformation
 
 	go streamSender.run(broadcast)
 	return streamSender

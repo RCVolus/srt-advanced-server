@@ -1,18 +1,13 @@
 package main
 
 import (
-	"log"
+	"github.com/RCVolus/srt-advanced-server/srt"
+	"github.com/RCVolus/srt-advanced-server/web"
 )
 
-var streamSender = newStreamSender()
-
 func main() {
-	go startHttp()
+	go web.StartHttp()
 
-	go ListenEgressSocket()
-	log.Println("Waiting for connections")
-	ListenIngressSocket()
-
-	// s.GetSockOptString()
-	//....
+	go srt.ListenEgressSocket()
+	srt.ListenIngressSocket()
 }

@@ -1,8 +1,9 @@
-package main
+package srt
 
 import (
 	"log"
 
+	"github.com/RCVolus/srt-advanced-server/stream"
 	"github.com/haivision/srtgo"
 )
 
@@ -22,27 +23,31 @@ func ListenIngressSocket() {
 	sck.Listen(10)
 
 	for {
-		HandleIngressSocket(sck)
+		socket, _, _ := sck.Accept()
+		log.Println("New SRT socket for ingest opened")
+		go HandleIngressSocket(socket)
 	}
 }
 
-func HandleIngressSocket(sck *srtgo.SrtSocket) {
-	socket, _, _ := sck.Accept()
-	log.Println("New SRT socket for ingest opened")
-	defer socket.Close()
-
-	streamid, err := socket.GetSockOptString(srtgo.SRTO_STREAMID)
+func HandleIngressSocket(socket *srtgo.SrtSocket) {
+	streamId, err := socket.GetSockOptString(srtgo.SRTO_STREAMID)
 	if err != nil {
 		log.Fatalln("Failed to get stream id, %s", err)
 	}
-	log.Println("Stream id: %s", streamid)
+	log.Println("Receiving new stream with StreamId ", streamId)
+
+	ingestInfo := &stream.IngestStreamInformation{
+		StreamId: streamId,
+	}
+
+	streamSender := stream.NewStreamSender(*ingestInfo)
+	stream.IngestStreams[streamId] = *streamSender
 
 	for {
 		// Create a new buffer
 		// UDP packet cannot be larger than MTU (1500)
 		buff := make([]byte, 1500)
 
-		// 5s timeout
 		n, err := socket.Read(buff)
 		if err != nil {
 			log.Println("Error occurred while reading SRT socket:", err)
@@ -62,6 +67,9 @@ func HandleIngressSocket(sck *srtgo.SrtSocket) {
 
 	// Close stream
 	streamSender.Close()
+	socket.Close()
+
+	delete(stream.IngestStreams, streamId)
 }
 
 /* func ListenCallback(socket *srtgo.SrtSocket, version int, addr *net.UDPAddr, streamid string) bool {
@@ -102,7 +110,16 @@ func ListenEgressSocket() {
 
 func HandleEgressSocket(socket srtgo.SrtSocket) {
 	c := make(chan []byte, 1024)
-	streamSender.Register(c)
+	stream, err := stream.IngestStreams["test"]
+
+	if err {
+		log.Println("Unable to create SRT viewer, no ingest stream found: ", err)
+		socket.SetRejectReason(srtgo.RejectionReasonNotFound)
+		socket.Close()
+		return
+	}
+
+	stream.Register(c)
 
 	for data := range c {
 		if len(data) < 1 {
@@ -117,6 +134,6 @@ func HandleEgressSocket(socket srtgo.SrtSocket) {
 		}
 	}
 
-	streamSender.Unregister(c)
+	stream.Unregister(c)
 	socket.Close()
 }
