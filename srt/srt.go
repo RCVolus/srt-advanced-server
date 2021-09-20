@@ -2,6 +2,8 @@ package srt
 
 import (
 	"log"
+	"net"
+	"time"
 
 	"github.com/RCVolus/srt-advanced-server/stream"
 	"github.com/haivision/srtgo"
@@ -23,13 +25,13 @@ func ListenIngressSocket() {
 	sck.Listen(10)
 
 	for {
-		socket, _, _ := sck.Accept()
+		socket, addr, _ := sck.Accept()
 		log.Println("New SRT socket for ingest opened")
-		go HandleIngressSocket(socket)
+		go HandleIngressSocket(socket, addr)
 	}
 }
 
-func HandleIngressSocket(socket *srtgo.SrtSocket) {
+func HandleIngressSocket(socket *srtgo.SrtSocket, addr *net.UDPAddr) {
 	streamId, err := socket.GetSockOptString(srtgo.SRTO_STREAMID)
 	if err != nil {
 		log.Fatalln("Failed to get stream id, %s", err)
@@ -37,7 +39,9 @@ func HandleIngressSocket(socket *srtgo.SrtSocket) {
 	log.Println("Receiving new stream with StreamId ", streamId)
 
 	ingestInfo := &stream.IngestStreamInformation{
-		StreamId: streamId,
+		StreamId:    streamId,
+		Remote:      addr.String(),
+		ConnectedAt: time.Now(),
 	}
 
 	streamSender := stream.NewStreamSender(*ingestInfo)
@@ -93,8 +97,8 @@ func ListenEgressSocket() {
 	sck.Listen(10)
 
 	for {
-		socket, _, _ := sck.Accept()
-		log.Println("New SRT socket for sending opened")
+		socket, addr, _ := sck.Accept()
+		log.Println("New SRT socket for egest opened")
 
 		// Send options
 		/* sendSocket.SetSockOptInt(srtgo.SRTO_LATENCY, 2000)
@@ -104,19 +108,24 @@ func ListenEgressSocket() {
 		// go SendSocket(*s)
 
 		// Register new output
-		go HandleEgressSocket(*socket)
+		go HandleEgressSocket(*socket, addr)
 	}
 }
 
-func HandleEgressSocket(socket srtgo.SrtSocket) {
+func HandleEgressSocket(socket srtgo.SrtSocket, addr *net.UDPAddr) {
 	c := make(chan []byte, 1024)
-	stream, err := stream.IngestStreams["test"]
+	stream, ok := stream.IngestStreams["test"]
 
-	if err {
-		log.Println("Unable to create SRT viewer, no ingest stream found: ", err)
+	if !ok {
+		log.Println("Unable to create SRT viewer, no ingest stream found")
 		socket.SetRejectReason(srtgo.RejectionReasonNotFound)
 		socket.Close()
 		return
+	}
+
+	egestInfo := &stream.EgestStreamInformation{
+		Remote:      addr.String(),
+		ConnectedAt: time.Now(),
 	}
 
 	stream.Register(c)

@@ -2,6 +2,7 @@ package stream
 
 import (
 	"sync"
+	"time"
 )
 
 var IngestStreams = make(map[string]StreamSender)
@@ -15,8 +16,15 @@ type StreamSender struct {
 	LockOutputs sync.Mutex
 }
 
+type EgestStreamInformation struct {
+	Remote      string
+	ConnectedAt time.Time
+}
+
 type IngestStreamInformation struct {
-	StreamId string
+	StreamId    string
+	Remote      string
+	ConnectedAt time.Time
 }
 
 func NewStreamSender(ingestStreamInformation IngestStreamInformation) (streamSender *StreamSender) {

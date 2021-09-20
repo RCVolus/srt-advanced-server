@@ -10,14 +10,13 @@ RUN ./configure && make && make install
 
 RUN mkdir /app
 WORKDIR /app
-ADD * /app
 
 COPY go.mod /app
 COPY go.sum /app
 
 RUN go mod download
 
-COPY *.go /app
+ADD . /app
 
 RUN go build .
 

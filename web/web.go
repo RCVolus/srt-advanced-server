@@ -10,6 +10,15 @@ import (
 	"github.com/labstack/echo/middleware"
 )
 
+type OutputInfo struct {
+	StreamInfo stream.EgestStreamInformation
+}
+
+type StreamInfo struct {
+	StreamInfo stream.IngestStreamInformation
+	Outputs    OutputInfo
+}
+
 func StartHttp() {
 	e := echo.New()
 
@@ -21,7 +30,16 @@ func StartHttp() {
 	})
 
 	e.GET("/ping", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, struct{ Status string }{Status: "OK"})
+		outputs := make(map[string]StreamInfo)
+
+		for key, value := range stream.IngestStreams {
+			outputs[key] = StreamInfo{
+				StreamInfo: value.IngestStreamInformation,
+				NumOutputs: len(value.Outputs),
+			}
+		}
+
+		return c.JSON(http.StatusOK, outputs)
 	})
 
 	httpPort := os.Getenv("HTTP_PORT")
