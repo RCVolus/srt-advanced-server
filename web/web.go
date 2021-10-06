@@ -8,6 +8,7 @@ import (
 	"github.com/haivision/srtgo"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type OutputInfo struct {
@@ -51,6 +52,8 @@ func StartHttp() {
 
 		return c.JSON(http.StatusOK, streamInfo)
 	})
+
+	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 
 	httpPort := os.Getenv("HTTP_PORT")
 	if httpPort == "" {

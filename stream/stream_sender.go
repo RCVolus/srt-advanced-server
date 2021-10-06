@@ -11,7 +11,7 @@ var IngestStreams = make(map[string]StreamSender)
 
 type StreamReceiver struct {
 	EgestStreamInformation EgestStreamInformation
-	Socket                 srtgo.SrtSocket
+	Socket                 *srtgo.SrtSocket
 }
 
 type StreamSender struct {
@@ -77,7 +77,7 @@ func (streamSender *StreamSender) Close() {
 }
 
 // Register a new output
-func (streamSender *StreamSender) Register(output chan []byte, info EgestStreamInformation, socket srtgo.SrtSocket) {
+func (streamSender *StreamSender) Register(output chan []byte, info EgestStreamInformation, socket *srtgo.SrtSocket) {
 	streamSender.LockOutputs.Lock()
 	streamSender.Outputs[output] = StreamReceiver{
 		EgestStreamInformation: info,
