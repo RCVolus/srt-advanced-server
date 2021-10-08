@@ -21,6 +21,6 @@ jobs:
       with:
         image: laraka/srt-advanced-server
         tags: latest
-        registry: hub.docker.com
+        # registry: hub.docker.com
         username: ${{ secrets.DOCKER_USER }}
         password: ${{ secrets.DOCKER_PASSWORD }}
