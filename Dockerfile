@@ -1,6 +1,6 @@
-FROM golang:1.17.1-alpine3.14
+FROM alpine:3.14.2
 
-RUN apk add linux-headers alpine-sdk cmake tcl openssl-dev zlib-dev supervisor
+RUN apk add go linux-headers alpine-sdk cmake tcl openssl-dev zlib-dev supervisor
 
 # Install SRT
 WORKDIR /srt
