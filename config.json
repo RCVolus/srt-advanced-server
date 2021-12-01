@@ -1,0 +1,13 @@
+{
+  "inputs": [
+    {
+      "streamId": "obs1",
+      "port": 11001,
+      "outputs": [
+        {
+          "port": 11101
+        }
+      ]
+    }
+  ]
+}

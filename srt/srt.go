@@ -18,15 +18,15 @@ var (
 	}, []string{"stream", "stat", "type", "remoteAddr"})
 )
 
-func ListenIngressSocket() {
+func ListenIngressSocket(port uint16) {
 	options := make(map[string]string)
 	options["transtype"] = "live"
 	options["latency"] = "200"
 	options["blocking"] = "1"
 
-	sck := srtgo.NewSrtSocket("0.0.0.0", 11001, options)
+	sck := srtgo.NewSrtSocket("0.0.0.0", port, options)
 
-	log.Println("Waiting for ingest SRT connections on 0.0.0.0:11001")
+	log.Println(fmt.Sprintf("Waiting for ingest SRT connections on 0.0.0.0:%d", port))
 
 	// sck.SetListenCallback(ListenCallback)
 
@@ -94,16 +94,16 @@ func HandleIngressSocket(socket *srtgo.SrtSocket, addr *net.UDPAddr) {
 	return true
 } */
 
-func ListenEgressSocket() {
+func ListenEgressSocket(port uint16, streamId string) {
 	// Open up a new socket
 	options := make(map[string]string)
 	options["transtype"] = "live"
 	options["latency"] = "200"
 	options["blocking"] = "0"
 
-	sck := srtgo.NewSrtSocket("0.0.0.0", 11002, options)
+	sck := srtgo.NewSrtSocket("0.0.0.0", port, options)
 
-	log.Println("Waiting for egest SRT connection on 0.0.0.0:11002")
+	log.Println(fmt.Sprintf("Waiting for egest SRT connection on 0.0.0.0:%d", port))
 
 	defer sck.Close()
 	sck.Listen(10)
@@ -120,13 +120,13 @@ func ListenEgressSocket() {
 		// go SendSocket(*s)
 
 		// Register new output
-		go HandleEgressSocket(socket, addr)
+		go HandleEgressSocket(socket, addr, streamId)
 	}
 }
 
-func HandleEgressSocket(socket *srtgo.SrtSocket, addr *net.UDPAddr) {
+func HandleEgressSocket(socket *srtgo.SrtSocket, addr *net.UDPAddr, streamId string) {
 	c := make(chan []byte, 1024)
-	currentStream, ok := stream.IngestStreams["test"]
+	currentStream, ok := stream.IngestStreams[streamId]
 
 	if !ok {
 		log.Println("Unable to create SRT viewer, no ingest stream found")
@@ -164,6 +164,13 @@ func HandleEgressSocket(socket *srtgo.SrtSocket, addr *net.UDPAddr) {
 
 func UpdateStats(socket *srtgo.SrtSocket, streamid string, streamType string, remoteAddr string) {
 	stats, _ := socket.Stats()
+
+	/* v := reflect.ValueOf(stats)
+
+	for i := 0; i < v.NumField(); i++ {
+		// values[i] = v.Field(i).Interface()
+		SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": v.Field(i).Type().Name()}).Set(float64(v.Field(i).Interface()))
+	} */
 
 	SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "MbpsBandwidth"}).Set(stats.MbpsBandwidth)
 	SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "MbpsMaxBW"}).Set(stats.MbpsMaxBW)
