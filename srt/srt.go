@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"reflect"
 	"time"
 
 	"github.com/RCVolus/srt-advanced-server/stream"
@@ -165,14 +166,25 @@ func HandleEgressSocket(socket *srtgo.SrtSocket, addr *net.UDPAddr, streamId str
 func UpdateStats(socket *srtgo.SrtSocket, streamid string, streamType string, remoteAddr string) {
 	stats, _ := socket.Stats()
 
-	/* v := reflect.ValueOf(stats)
+	v := reflect.ValueOf(stats)
 
 	for i := 0; i < v.NumField(); i++ {
 		// values[i] = v.Field(i).Interface()
-		SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": v.Field(i).Type().Name()}).Set(float64(v.Field(i).Interface()))
-	} */
+		var metricValue float64
 
-	SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "MbpsBandwidth"}).Set(stats.MbpsBandwidth)
+		switch v.Field(i).Type().Key().Kind() {
+		case reflect.Int:
+			metricValue = float64(v.Field(i).Interface().(int))
+		case reflect.Int64:
+			metricValue = float64(v.Field(i).Interface().(int64))
+		case reflect.Float64:
+			metricValue = v.Field(i).Interface().(float64)
+		}
+
+		SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": v.Field(i).Type().Name()}).Set(metricValue)
+	}
+
+	/* SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "MbpsBandwidth"}).Set(stats.MbpsBandwidth)
 	SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "MbpsMaxBW"}).Set(stats.MbpsMaxBW)
 	SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "MbpsRecvRate"}).Set(stats.MbpsRecvRate)
 	SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "MbpsSendRate"}).Set(stats.MbpsSendRate)
@@ -245,5 +257,5 @@ func UpdateStats(socket *srtgo.SrtSocket, streamid string, streamType string, re
 	SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "PktSndLoss"}).Set(float64(stats.PktSndLoss))
 	SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "PktSndLossTotal"}).Set(float64(stats.PktSndLossTotal))
 	SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "UsSndDuration"}).Set(float64(stats.UsSndDuration))
-	SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "UsSndDurationTotal"}).Set(float64(stats.UsSndDurationTotal))
+	SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "UsSndDurationTotal"}).Set(float64(stats.UsSndDurationTotal)) */
 }
