@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"reflect"
 	"time"
 
 	"github.com/RCVolus/srt-advanced-server/stream"
