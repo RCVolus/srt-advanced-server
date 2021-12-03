@@ -18,10 +18,10 @@ var (
 	}, []string{"stream", "stat", "type", "remoteAddr"})
 )
 
-func ListenIngressSocket(port uint16) {
+func ListenIngressSocket(port uint16, latency uint16) {
 	options := make(map[string]string)
 	options["transtype"] = "live"
-	options["latency"] = "200"
+	options["latency"] = string(latency)
 	options["blocking"] = "1"
 
 	sck := srtgo.NewSrtSocket("0.0.0.0", port, options)
@@ -94,11 +94,11 @@ func HandleIngressSocket(socket *srtgo.SrtSocket, addr *net.UDPAddr) {
 	return true
 } */
 
-func ListenEgressSocket(port uint16, streamId string) {
+func ListenEgressSocket(port uint16, streamId string, latency uint16) {
 	// Open up a new socket
 	options := make(map[string]string)
 	options["transtype"] = "live"
-	options["latency"] = "200"
+	options["latency"] = string(latency)
 	options["blocking"] = "0"
 
 	sck := srtgo.NewSrtSocket("0.0.0.0", port, options)

@@ -1,13 +1,15 @@
 {
   "inputs": [
     {
-      "port": 11001
+      "port": 11001,
+      "latency": 200
     }
   ],
   "outputs": [
     {
       "port": 11101,
-      "streamId": "obs1"
+      "streamId": "obs1",
+      "latency": 200
     }
   ]
 }

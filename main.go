@@ -23,11 +23,11 @@ func main() {
 	time.Sleep(200 * time.Millisecond)
 
 	for _, input := range config.Inputs {
-		go srt.ListenIngressSocket(input.Port)
+		go srt.ListenIngressSocket(input.Port, input.Latency)
 	}
 
 	for _, output := range config.Outputs {
-		go srt.ListenEgressSocket(output.Port, output.StreamId)
+		go srt.ListenEgressSocket(output.Port, output.StreamId, output.Latency)
 	}
 
 	<-Exit

@@ -8,11 +8,13 @@ import (
 
 type StreamServerConfig struct {
 	Inputs []struct {
-		Port uint16 `json:"port"`
+		Port    uint16 `json:"port"`
+		Latency uint16 `json:"latency"`
 	} `json:"inputs"`
 	Outputs []struct {
 		StreamId string `json:"streamId"`
 		Port     uint16 `json:"port"`
+		Latency  uint16 `json:"latency"`
 	} `json:"outputs"`
 }
 
