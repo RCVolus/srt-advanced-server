@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"reflect"
 	"time"
 
 	"github.com/RCVolus/srt-advanced-server/stream"
@@ -164,9 +163,9 @@ func HandleEgressSocket(socket *srtgo.SrtSocket, addr *net.UDPAddr, streamId str
 }
 
 func UpdateStats(socket *srtgo.SrtSocket, streamid string, streamType string, remoteAddr string) {
-	stats, _ := socket.Stats()
+	// stats, _ := socket.Stats()
 
-	v := reflect.ValueOf(stats)
+	/* v := reflect.ValueOf(stats)
 
 	for i := 0; i < v.NumField(); i++ {
 		// values[i] = v.Field(i).Interface()
@@ -182,7 +181,7 @@ func UpdateStats(socket *srtgo.SrtSocket, streamid string, streamType string, re
 		}
 
 		SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": v.Field(i).Type().Name()}).Set(metricValue)
-	}
+	} */
 
 	/* SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "MbpsBandwidth"}).Set(stats.MbpsBandwidth)
 	SrtStats.With(prometheus.Labels{"stream": streamid, "type": streamType, "remoteAddr": remoteAddr, "stat": "MbpsMaxBW"}).Set(stats.MbpsMaxBW)
