@@ -19,7 +19,7 @@ type StreamServerConfig struct {
 var config *StreamServerConfig
 
 func loadConfig() {
-	raw, err := ioutil.ReadFile("./config.json")
+	raw, err := ioutil.ReadFile("./cfg/config.json")
 	if err != nil {
 		log.Println("Error occured while reading config", err)
 		return
