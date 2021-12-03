@@ -24,10 +24,10 @@ func main() {
 
 	for _, input := range config.Inputs {
 		go srt.ListenIngressSocket(input.Port)
+	}
 
-		for _, output := range input.Outputs {
-			go srt.ListenEgressSocket(output.Port, input.StreamId)
-		}
+	for _, output := range config.Outputs {
+		go srt.ListenEgressSocket(output.Port, output.StreamId)
 	}
 
 	<-Exit

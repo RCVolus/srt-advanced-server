@@ -8,12 +8,12 @@ import (
 
 type StreamServerConfig struct {
 	Inputs []struct {
+		Port uint16 `json:"port"`
+	} `json:"inputs"`
+	Outputs []struct {
 		StreamId string `json:"streamId"`
 		Port     uint16 `json:"port"`
-		Outputs  []struct {
-			Port uint16 `json:"port"`
-		} `json:"outputs"`
-	} `json:"inputs"`
+	} `json:"outputs"`
 }
 
 var config *StreamServerConfig
