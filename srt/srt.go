@@ -23,6 +23,7 @@ func ListenIngressSocket(port uint16, latency uint16) {
 	options["transtype"] = "live"
 	options["latency"] = string(latency)
 	options["blocking"] = "1"
+	options["rcvbuf"] = "20000000"
 
 	sck := srtgo.NewSrtSocket("0.0.0.0", port, options)
 
